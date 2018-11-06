@@ -14,6 +14,9 @@ class FileToTCPServer {
   String[] data_file_list;
   int data_file_list_count;
   int data_file_list_index;
+  byte[] data_load_buf;
+  int data_write_index;
+  int data_write_length;
 
   FileToTCPServer(PApplet parent, String server_ip, int server_port, String data_directory, String data_file_prefix) {
     this.server_ip = server_ip;
@@ -95,14 +98,14 @@ class FileToTCPServer {
     //}
   }
 
-  void write_file_2_tcp() {
+  void write_file_2_tcp_init(int length) {
     if (tcp_server_handle == null) return;
     if (data_file_list_count == 0) return;
 
-    byte[] data_buf;
+    data_load_buf = loadBytes(data_directory+"\\"+data_file_list[data_file_list_index]);
 
-    data_buf = loadBytes(data_directory+"\\"+data_file_list[data_file_list_index]);
-    tcp_server_handle.write(data_buf);
+    data_write_index = 0;
+    data_write_length = length;
 
     data_file_list_index ++;
     if (data_file_list_index >= data_file_list_count)
@@ -116,6 +119,10 @@ class FileToTCPServer {
 
 }
 
+final static int FRAME_RATE = 5;
+final static int BITS_PER_SECOND = 115200;
+final static int BITS_TO_BYTES = 12;
+
 void setup() {
   size(640, 300);
   background(250);
@@ -123,7 +130,7 @@ void setup() {
   stroke(0);
   textAlign(LEFT, TOP);
 
-  frameRate(5); // Slow it down a little
+  frameRate(FRAME_RATE); // Slow it down a little
 
   Table table;
 
@@ -199,12 +206,14 @@ void draw() {
             
             String cmd_prefix = new String(input, 0, 4);
             if (cmd_prefix.equals("GSCN")) {
-              ftts.write_file_2_tcp();
+              ftts.write_file_2_tcp_init(BITS_PER_SECOND/BITS_TO_BYTES/FRAME_RATE);
             }
             else {
               ftts.write(input);
             }
           }
+
+          ftts.write_file_2_tcp_continue();
         }
       }
       else
