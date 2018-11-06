@@ -19,7 +19,7 @@ class FileToTCPServer {
     this.server_ip = server_ip;
     this.server_port = server_port;
     this.data_directory = data_directory;
-    if (this.data_file_prefix == null || this.data_file_prefix == "") {
+    if (data_file_prefix == null || data_file_prefix == "") {
       this.data_file_prefix = "All";
     }
     else {
