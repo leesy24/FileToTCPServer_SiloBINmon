@@ -19,9 +19,17 @@ class FileToTCPServer {
     this.server_ip = server_ip;
     this.server_port = server_port;
     this.data_directory = data_directory;
-    this.data_file_prefix = data_file_prefix + "_";
+    if (this.data_file_prefix == null || this.data_file_prefix == "") {
+      this.data_file_prefix = "All";
+    }
+    else {
+      this.data_file_prefix = data_file_prefix;
+    }
 
-    if (server_ip == null || server_ip.equals("0.0.0.0")) {
+    if (server_ip.charAt(0) == '#') {
+      tcp_server_handle = null;
+    }
+    else if (server_ip == null || server_ip == "" || server_ip.equals("0.0.0.0")) {
       try {
         tcp_server_handle = new Server(parent, server_port);  // Start a simple server on a port
       }
@@ -46,8 +54,7 @@ class FileToTCPServer {
 
     data_directory_handle = new File(data_directory);
 
-    if (!data_directory_handle.isAbsolute())
-    {
+    if (!data_directory_handle.isAbsolute()) {
       data_directory_handle = new File(sketchPath() + "\\" + data_directory);
     }
 
@@ -55,24 +62,31 @@ class FileToTCPServer {
       return;
     }
 
-    final String filename_prefix = this.data_file_prefix;
-    data_file_list =
-      data_directory_handle.list(
-        new FilenameFilter() {
-          @ Override final boolean accept(File dir, String name) {
-            //println("name=" + name);
-            return
-              name.length() > filename_prefix.length()
-              &&
-              name.substring(0, filename_prefix.length()).equals(filename_prefix)
-              &&
-              name.toLowerCase().endsWith(".dat");
+    if (data_file_prefix == null || data_file_prefix == "") {
+      data_file_list = data_directory_handle.list();
+    }
+    else {
+      final String filename_prefix = data_file_prefix;
+      data_file_list =
+        data_directory_handle.list(
+          new FilenameFilter() {
+            @ Override final boolean accept(File dir, String name) {
+              //println("name=" + name);
+              return
+                name.length() > filename_prefix.length()
+                &&
+                name.substring(0, filename_prefix.length()).equals(filename_prefix)
+                &&
+                name.toLowerCase().endsWith(".dat");
+            }
           }
-        }
-      );
+        );
+    }
+
     if (data_file_list != null && data_file_list.length > 0) {
       Arrays.sort(data_file_list);
     }
+
     data_file_list_count = data_file_list.length;
     data_file_list_index = 0;
     println("data_file_list_count=" + data_file_list_count);
@@ -153,28 +167,35 @@ void draw() {
     if (ftts.tcp_server_handle != null) {
       string += "O " + ftts.data_file_list_count + " ";
       if (ftts.tcp_server_handle.clientCount > 0) {
-        string += ftts.tcp_server_handle.clientCount + " " + ftts.data_file_list_index + " " + ftts.data_file_list[ftts.data_file_list_index];
-        // Receive data from client
-        Client client;
-        client = ftts.tcp_server_handle.available();
-        if (client != null) {
-          byte[] input;
+        string += ftts.tcp_server_handle.clientCount + " " + ftts.data_file_list_index + " ";
+        if (ftts.data_file_list_count != 0) {
+          string += ftts.data_file_list[ftts.data_file_list_index];
+          // Receive data from client
+          Client client;
+          client = ftts.tcp_server_handle.available();
+          if (client != null) {
+            byte[] input;
 
-          input = client.readBytes();
-          //input = input.substring(0, input.indexOf("\n"));  // Only up to the newline
-          
-          String cmd_prefix = new String(input, 0, 4);
-          if (cmd_prefix.equals("GSCN")) {
-            ftts.write_file_2_tcp();
+            input = client.readBytes();
+            //input = input.substring(0, input.indexOf("\n"));  // Only up to the newline
+            
+            String cmd_prefix = new String(input, 0, 4);
+            if (cmd_prefix.equals("GSCN")) {
+              ftts.write_file_2_tcp();
+            }
+            else {
+              ftts.write(input);
+            }
           }
-          else {
-            ftts.write(input);
-          }
+        }
+        else
+        {
+          string += "No files";
         }
       }
       else
       {
-        string += "No client";
+        string += "No clients";
         ftts.data_file_list_index = 0;
       }
     }
