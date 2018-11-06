@@ -166,10 +166,28 @@ void draw() {
     string = ftts.server_ip + ":" + ftts.server_port + " " + ftts.data_directory + " " + ftts.data_file_prefix + " ";
     if (ftts.tcp_server_handle != null) {
       string += "O " + ftts.data_file_list_count + " ";
+      if (ftts.data_file_list_count == 0) {
+        string += "No files ";
+      }
       if (ftts.tcp_server_handle.clientCount > 0) {
-        string += ftts.tcp_server_handle.clientCount + " " + ftts.data_file_list_index + " ";
+        string += ftts.tcp_server_handle.clientCount + " ";
         if (ftts.data_file_list_count != 0) {
-          string += ftts.data_file_list[ftts.data_file_list_index];
+          string += ftts.data_file_list_index + " " + ftts.data_file_list[ftts.data_file_list_index];
+        }
+      }
+      else
+      {
+        string += "No clients";
+      }
+    }
+    else {
+      string += "X";
+    }
+    strings.add(string);
+
+    if (ftts.tcp_server_handle != null) {
+      if (ftts.tcp_server_handle.clientCount > 0) {
+        if (ftts.data_file_list_count != 0) {
           // Receive data from client
           Client client;
           client = ftts.tcp_server_handle.available();
@@ -188,21 +206,12 @@ void draw() {
             }
           }
         }
-        else
-        {
-          string += "No files";
-        }
       }
       else
       {
-        string += "No clients";
         ftts.data_file_list_index = 0;
       }
     }
-    else {
-      string += "X";
-    }
-    strings.add(string);
   }
 
   int i = 0;
