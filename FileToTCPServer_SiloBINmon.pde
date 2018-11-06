@@ -137,7 +137,7 @@ class FileToTCPServer {
 
 }
 
-final static int FRAME_RATE = 5;
+final static int FRAME_RATE = 10;
 final static int BITS_PER_SECOND = 115200;
 final static int BITS_TO_BYTES = 12;
 
