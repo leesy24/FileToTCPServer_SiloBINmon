@@ -112,6 +112,24 @@ class FileToTCPServer {
       data_file_list_index = 0;
   }
 
+  void write_file_2_tcp_continue() {
+    if (tcp_server_handle == null) return;
+    if (data_file_list_count == 0) return;
+
+    if (data_load_buf == null) return;
+    if (data_write_index >= data_load_buf.length) return;
+
+    byte[] data_write_buf;
+
+    data_write_buf = Arrays.copyOfRange(data_load_buf, data_write_index, ((data_load_buf.length - data_write_index) > data_write_length)?(data_write_index + data_write_length):data_load_buf.length);
+    tcp_server_handle.write(data_write_buf);
+
+    data_write_index += data_write_length;
+    if (data_write_index >= data_load_buf.length) {
+      data_write_index = data_load_buf.length;
+    }
+  }
+
   void write(byte[] data_buf) {
     if (tcp_server_handle == null) return;
     tcp_server_handle.write(data_buf);
