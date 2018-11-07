@@ -5,6 +5,16 @@ import java.io.FilenameFilter;
 
 ArrayList<FileToTCPServer> FileToTCPServer_list = new ArrayList<FileToTCPServer>();
 
+int get_int_diff(int new_val, int old_val)
+{
+  int diff;
+
+  if (new_val < old_val) diff = MAX_INT - old_val + new_val - MIN_INT;
+  else diff = new_val - old_val;
+
+  return diff;
+}
+
 class FileToTCPServer {
   String server_ip;
   int server_port;
@@ -16,7 +26,8 @@ class FileToTCPServer {
   int data_file_list_index;
   byte[] data_load_buf;
   int data_write_index;
-  int data_write_length;
+  int data_write_bytes_per_sec;
+  int data_write_last_millis; 
 
   FileToTCPServer(PApplet parent, String server_ip, int server_port, String data_directory, String data_file_prefix) {
     this.server_ip = server_ip;
@@ -98,14 +109,15 @@ class FileToTCPServer {
     //}
   }
 
-  void write_file_2_tcp_init(int length) {
+  void write_file_2_tcp_init(int bytes_per_sec) {
     if (tcp_server_handle == null) return;
     if (data_file_list_count == 0) return;
 
     data_load_buf = loadBytes(data_directory+"\\"+data_file_list[data_file_list_index]);
 
     data_write_index = 0;
-    data_write_length = length;
+    data_write_bytes_per_sec = bytes_per_sec;
+    data_write_last_millis = millis();
 
     data_file_list_index ++;
     if (data_file_list_index >= data_file_list_count)
@@ -119,12 +131,24 @@ class FileToTCPServer {
     if (data_load_buf == null) return;
     if (data_write_index >= data_load_buf.length) return;
 
+    int data_write_bytes;
+    int data_write_curr_millis = millis();
+    int diff = get_int_diff(data_write_curr_millis, data_write_last_millis);
+
+    data_write_last_millis = data_write_curr_millis;
+
+    if (diff <= 0) return;
+
+    data_write_bytes = data_write_bytes_per_sec * diff / 1000;
+    //println("data_write_bytes=" + data_write_bytes);
+    if (data_write_bytes == 0) return;
+
     byte[] data_write_buf;
 
-    data_write_buf = Arrays.copyOfRange(data_load_buf, data_write_index, ((data_load_buf.length - data_write_index) > data_write_length)?(data_write_index + data_write_length):data_load_buf.length);
+    data_write_buf = Arrays.copyOfRange(data_load_buf, data_write_index, ((data_load_buf.length - data_write_index) > data_write_bytes)?(data_write_index + data_write_bytes):data_load_buf.length);
     tcp_server_handle.write(data_write_buf);
 
-    data_write_index += data_write_length;
+    data_write_index += data_write_bytes;
     if (data_write_index >= data_load_buf.length) {
       data_write_index = data_load_buf.length;
     }
@@ -224,7 +248,7 @@ void draw() {
             
             String cmd_prefix = new String(input, 0, 4);
             if (cmd_prefix.equals("GSCN")) {
-              ftts.write_file_2_tcp_init(BITS_PER_SECOND/BITS_TO_BYTES/FRAME_RATE);
+              ftts.write_file_2_tcp_init(BITS_PER_SECOND/BITS_TO_BYTES);
             }
             else {
               ftts.write(input);
