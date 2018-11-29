@@ -3,7 +3,7 @@ import java.lang.RuntimeException;
 import java.util.Arrays;
 import java.io.FilenameFilter;
 
-ArrayList<FileToTCPServer> FileToTCPServer_list = new ArrayList<FileToTCPServer>();
+ArrayList<FileToTCPServer> FileToTCPServer_list;
 
 int get_int_diff(int new_val, int old_val)
 {
@@ -109,6 +109,13 @@ class FileToTCPServer {
     //}
   }
 
+  void close() {
+    if (tcp_server_handle == null) return;
+
+    tcp_server_handle.stop();
+    tcp_server_handle = null;
+  }
+
   void write_file_2_tcp_init(int bytes_per_sec) {
     if (tcp_server_handle == null) return;
     if (data_file_list_count == 0) return;
@@ -173,6 +180,8 @@ void setup() {
   textAlign(LEFT, TOP);
 
   frameRate(FRAME_RATE); // Slow it down a little
+
+  FileToTCPServer_list = new ArrayList<FileToTCPServer>();
 
   Table table;
 
@@ -272,4 +281,26 @@ void draw() {
     i ++;
   }
 
+}
+
+import java.awt.event.KeyEvent;
+
+void keyPressed()
+{
+  if (key == ESC)
+  {
+    key = 0;  // Prevents the ESC key from being used.
+  }
+  else if(key == CODED)
+  {
+    if(keyCode == KeyEvent.VK_F5)
+    {
+      for(FileToTCPServer ftts:FileToTCPServer_list)
+      {
+        ftts.close();
+      }
+      // To restart program set frameCount to -1, this wiil call setup() of main.
+      frameCount = -1;
+    }
+  }
 }
