@@ -116,6 +116,13 @@ class FileToTCPServer {
     tcp_server_handle = null;
   }
 
+  void reset() {
+    if (tcp_server_handle == null) return;
+
+    data_file_list_index = 0;
+    data_load_buf = null;
+  }
+
   void write_file_2_tcp_init(int bytes_per_sec) {
     if (tcp_server_handle == null) return;
     if (data_file_list_count == 0) return;
@@ -293,7 +300,14 @@ void keyPressed()
   }
   else if(key == CODED)
   {
-    if(keyCode == KeyEvent.VK_F5)
+    if(keyCode == KeyEvent.VK_F4)
+    {
+      for(FileToTCPServer ftts:FileToTCPServer_list)
+      {
+        ftts.reset();
+      }
+    }
+    else if(keyCode == KeyEvent.VK_F5)
     {
       for(FileToTCPServer ftts:FileToTCPServer_list)
       {
