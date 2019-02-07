@@ -194,7 +194,7 @@ void setup() {
 
   // Load lines file(CSV type) into a Table object
   // "header" option indicates the file has a header row
-  table = loadTable(sketchPath() + "\\config.csv", "header");
+  table = loadTable(sketchPath() + "\\data\\" + "config.csv", "header");
   // Check loadTable ok.
   if(table != null) {
     for (TableRow variable:table.rows()) {
